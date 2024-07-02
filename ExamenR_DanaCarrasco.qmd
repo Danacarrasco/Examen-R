@@ -1,0 +1,497 @@
+---
+  document-css: false
+  link-citations: true
+  date-format: long
+  lang: en
+  title: Examen
+  author: Dana Carrasco
+  editor: visual
+  bibliography:
+    - Trabajo1R.bib
+---
+
+```{r}
+pacman::p_load(dplyr, sjmisc, car, sjlabelled, stargazer, haven, ggplot2, kableExtra, sjPlot, GGally, corrplot, tidyverse, car, haven, psych, summarytools, texreg, ggplot2, ggpubr)
+
+```
+
+#  Brechas de género: La conciliación de la doble presencia
+
+El presente trabajo tiene por objetivo estudiar la brecha de género en torno a la distribución de las labores domésticas o trabajo reproductivo en el marco de la doble presencia que realizan las mujeres en Chile. Debido a la actual situación de presencialidad a la que se ven expuestas las mujeres al mismo tiempo en el trabajo reproductivo como en el trabajo remunerado. Como hipotesis de trabajo, tenemos que, mientras mayores sean las horas dedicadas al trabajo domestico se obtiene un efecto negativo en los ingresos. Además es relevante analizar cómo se divide el mercado laboral con la creciente participación de las mujeres en este, la cual en comparación con los hombres sigue siendo más baja según la CASEN (2022)  este fenómeno presenta  un aumento en la participación laboral de las mujeres, que pasó de 43,5% en 2006 a 52,0% en 2022, y a su vez la participación de los hombres se ha mantenido, si bien, con altos y bajos, en torno al 73% desde el inicio del período.
+
+Sin embargo, esta división del mercado del trabajo trae consigo no tan solo pocas herramientas para enfrentarse al mercado laboral y a su vez a los cambios en el trabajo del hogar sino también en la ocupación del tiempo dentro del trabajo remunerado. Planteando así que "la teoría del mercado dual utiliza a la familia contra el empleo y se sustituye la tradicional división sexual del trabajo por una división sexual del tiempo de trabajo: el tiempo completo para los hombres, el tiempo parcial para las mujeres" (Icart, Santamaría, 2016) [ver @ignasibruneticart2016] . De esta forma, las mujeres dedicarían menos tiempo al trabajo remunerado y mayor tiempo a las labores domésticas. 
+
+Existen ciertas actividades que están ligadas a la mujer socialmente. y que con ciertas particularidades se definen como trabajo reproductivo, este es  aquel que comprende acciones de cuidado y atención a la familia y el hogar. La singularidad que tiene el trabajo reproductivo es que este no es remunerado con un salario por lo que queda fuera del mercado laboral. Además se le atribuyen exclusivamente a la mujer debido a construcciones sociales "Esa construcción que, en síntesis, convierte a las hembras en sujetos femeninos, orientados centralmente hacia el trabajo de la reproducción y a los machos, en sujetos masculinos, centrados básicamente en el trabajo de la producción." (Carrasquer, 1998) feminizando de esa forma las labores de la esfera privada y  teniendo así que ejercer una "doble presencia" para las mujeres  y compatibilizar su trabajo reproductivo en el hogar con su vida laboral o productiva. Otra característica del trabajo reproductivo es la invisibilización del mismo por la sociedad y por las mismas mujeres que lo realizan y esto debido a que no se le considera trabajo productivo como mencionamos anteriormente (Carrasquer, 1998) [ver @pilarcarrasquerTrabajoReproductivo1998]
+
+Esto suele ser relevante, ya que cabe plantearse si en parejas con doble ingreso la situación suele ser similar. Si bien, la carga de las labores domésticas en parejas de este tipo suele distribuirse mejor, delegando así parte de estas al hombre o a externalizar estas labores, la carga global de las mujeres sigue siendo mayor cuando el hombre dedica mayor tiempo al mercado laboral, aumentando así la brecha de género y afectando al desempeño laboral de la mujer, de tal manera que "los recursos relativos de las mujeres inciden muy poco en la brecha de género en el interior de los hogares, y son las actitudes y los valores masculinos los que tienen mayor impacto en la dedicación masculina al trabajo no remunerado, y por tanto en los procesos de desigualdad." (Dominguez. Muñiz, Rubilar, 2018) [@rubilardonosoTrabajoDomesticoCuidados2018]
+
+De esta forma, la doble presencia que experimentan las mujeres en torno a trabajos remunerados y labores del hogar, generan una brecha de género que si bien, con la inserción de las mujeres al mercado laboral ha disminuido, no se ha mitigado por completo la desigualdad o la división del trabajo seuxal. generando así que el trabajo reproductivo tenga como efectos inmediatos "a pesar de no contar con una evaluación homologada y prestigiada, son: facilitar la disponibilidad laboral de los masculinos adultos del hogar-familia, en particular, y proporcionar bienestar cotidiano a los convivientes del núcleo familiar, en general" (Torns, 2008). @teresatornsTrabajoCuidadoCuestiones2008\]
+
+# Operacionalizacion de variables
+
+```{r}
+options(scipen=999)
+
+```
+
+```{r}
+load(url("https://github.com/kevin-carrasco/r-data-analisis/raw/main/files/data/casen2022.RData"))
+```
+
+```{r}
+dim(casen2022)
+```
+
+```{r}
+proc_data <- casen2022 %>% select(o1,
+                                  o2,
+                                  o6,
+                                  o7,
+                                  o10,
+                                  y1,
+                                  sexo,
+                                
+                                  r12a,
+                                  r12b)
+```
+
+```{r}
+proc_data$sexo <- set_labels(proc_data$sexo,
+                             labels = c("Hombre" = 0,
+                                        "Mujer" = 1))
+
+```
+
+```{r}
+proc_data <- proc_data %>% rename("trabajo_sinquehacer"=o1,
+                                  "realizo_act"=o2,
+                                  "busco_trabajo"=o6,
+                                  "razon_nobuscar"=o7,
+                                  "horas_semanales"=o10,
+                                  "ingresos"=y1,
+                                  "niveleduc_madre"= r12a,
+                                  "niveleduc_padre"=r12b)
+                                  
+                              
+
+```
+
+```{r}
+names(proc_data)
+```
+
+```{r}
+frq(proc_data$niveleduc_madre)
+```
+
+```{r}
+proc_data$trabajo_sinquehacer <- set_label(x = proc_data$trabajo_sinquehacer,label = "Trabajar sin realizar quehaceres dom")
+get_label(proc_data$trabajo_sinquehacer)
+```
+
+```{r}
+frq(proc_data$trabajo_sinquehacer)
+```
+
+```{r}
+proc_data$realizo_act <- set_label(x = proc_data$realizo_act,label = "Aunque no trabajo realizo alguna actividad")
+get_label(proc_data$realizo_act)
+```
+
+```{r}
+proc_data$busco_trabajo <- set_label(x = proc_data$busco_trabajo,label = "Busco trabajo")
+get_label(proc_data$busco_trabajo)
+```
+
+```{r}
+proc_data$razon_nobuscar <- set_label(x = proc_data$razon_nobuscar,label = "Razon por la cual no busco trabajo")
+get_label(proc_data$razon_nobuscar)
+```
+
+```{r}
+proc_data$horas_semanales <- set_label(x = proc_data$horas_semanales,label = "Horas que trabaja semanalmente")
+get_label(proc_data$horas_semanales)
+```
+
+```{r}
+proc_data$ingresos <- set_label(x = proc_data$ingresos,label = "Ingresos")
+get_label(proc_data$ingresos)
+```
+
+```{r}
+proc_data$sexo <- set_label(x = proc_data$sexo,label = "Sexo")
+get_label(proc_data$sexo)
+```
+
+```{r}
+proc_data$niveleduc_madre <- set_label(x = proc_data$niveleduc_madre,label = "Nivel educacional alcanzado por la madre")
+get_label(proc_data$niveleduc_madre)
+```
+
+```{r}
+proc_data$niveleduc_padre <- set_label(x = proc_data$niveleduc_padre,label = "Nivel educacional alcanzado por el padre")
+get_label(proc_data$niveleduc_padre)
+```
+
+```{r}
+frq(proc_data$busco_trabajo)
+```
+
+```{r}
+frq(proc_data$sexo)
+```
+
+```{r}
+proc_data <- proc_data %>%
+  mutate(niveleduc_madre = case_when(
+    niveleduc_madre == 1 ~ "No asistió",
+    niveleduc_madre == 2 ~ "Educación básica",
+    niveleduc_madre %in% c(3, 4) ~ "Educación media",
+    niveleduc_madre %in% c(5, 6, 7) ~ "Educación superior",
+    TRUE ~ as.character(niveleduc_madre)  # Cualquier otro caso
+  ))
+
+```
+
+```{r}
+table(proc_data$niveleduc_madre)
+```
+
+```{r}
+proc_data <- proc_data %>%
+  mutate(niveleduc_padre = case_when(
+    niveleduc_padre == 1 ~ "No asistió",
+    niveleduc_padre == 2 ~ "Educación básica",
+    niveleduc_padre %in% c(3, 4) ~ "Educación media",
+    niveleduc_padre %in% c(5, 6, 7) ~ "Educación superior",
+    TRUE ~ as.character(niveleduc_padre)  # Cualquier otro caso
+  ))
+
+```
+
+```{r}
+table(proc_data$niveleduc_padre)
+```
+
+```         
+```
+
+```{r}
+proc_data$sexo <- car::recode(proc_data$sexo, "1=0;2=1")
+```
+
+```{r}
+proc_data$sexo <- factor(proc_data$sexo,
+            labels=c( "Hombre",
+                      "Mujer"),
+            levels=c(0,1))
+```
+
+```{r}
+frq(proc_data$ingresos)
+```
+
+```{r}
+proc_data <- proc_data %>% set_na(., na = c(-88, -77))
+```
+
+```{r}
+frq(proc_data$niveleduc_madre)
+```
+
+```{r}
+colSums(is.na(proc_data))
+```
+
+```{r}
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse")
+}
+library(tidyverse)
+```
+
+```{r}
+num_cols <- sapply(proc_data, is.numeric)
+
+# Imputar valores faltantes por la mediana solo en columnas numéricas
+proc_data_imputed <- proc_data %>%
+  mutate(across(names(proc_data)[num_cols], ~ if_else(is.na(.), median(., na.rm = TRUE), .)))
+```
+
+# Visualizacion de los datos, tabla descriptiva y graficos univariados
+
+```{r}
+proc_data_imputed %>% ggplot(aes(x = niveleduc_madre )) + 
+  geom_bar(fill = "pink")
+```
+
+El gráfico de barras muestra la distribución de los niveles de educación que poseen las madres encuestadas. La mayoría de ellas tienen educación básica, mientras que la siguiente categoría con mayor cantidad son las que tienen educación media y un poco menos no asistieron a la escuela, finalmente el menor porcentaje de mujeres encuestadas han alcanzado la educación superior.
+
+```{r}
+proc_data_imputed %>% ggplot(aes(x = trabajo_sinquehacer )) + 
+  geom_bar(fill = "purple")
+```
+
+El siguiente gráfico nos entrega datos con respecto a la cantidad de personas que puede trabajar sin relizar quehaceres domesticos las cuales son ligeramente más que aquellas que no pueden trabajar sin realizar labores de ese tipo.
+
+```{r}
+sjt.xtab(proc_data_imputed$sexo, proc_data_imputed$trabajo_sinquehacer,
+         show.col.prc = TRUE,
+         show.summary = FALSE,
+         encoding = "UTF-8")
+
+
+
+
+```
+
+```{r}
+proc_data_imputed <- proc_data_imputed %>%
+  mutate(across(where(is.labelled), as.character))
+```
+
+```{r}
+sjmisc::descr(proc_data_imputed)
+```
+
+```{r}
+proc_data_imputed$horas_semanales <- as.numeric(proc_data_imputed$horas_semanales)
+proc_data_imputed$ingresos <- as.numeric(proc_data_imputed$ingresos)
+```
+
+```{r}
+proc_data_imputed$niveleduc_madre <- recode_factor(proc_data_imputed$niveleduc_madre,
+                                                  "1" = "No asistió",
+                                                  "2" = "Educación básica",
+                                                  "3" = "Educación media",
+                                                  "4" = "Educación media",
+                                                  "5" = "Educación superior",
+                                                  "6" = "Educación superior",
+                                                  "7" = "Educación superior")
+
+proc_data_imputed$niveleduc_padre <- recode_factor(proc_data_imputed$niveleduc_padre,
+                                                  "1" = "No asistió",
+                                                  "2" = "Educación básica",
+                                                  "3" = "Educación media",
+                                                  "4" = "Educación media",
+                                                  "5" = "Educación superior",
+                                                  "6" = "Educación superior",
+                                                  "7" = "Educación superior")
+
+
+```
+
+```{r}
+proc_data_imputed <- proc_data_imputed %>%
+  mutate(across(where(is.numeric), ~ if_else(is.na(.), median(., na.rm = TRUE), .)))
+
+
+```
+
+```{r}
+descr(proc_data_imputed)
+```
+
+```{r}
+proc_data_imputed$niveleduc_madre <- factor(proc_data_imputed$niveleduc_madre, levels = c("No asistió", "Educación básica", "Educación media", "Educación superior"))
+proc_data_imputed$niveleduc_padre <- factor(proc_data_imputed$niveleduc_padre, levels = c("No asistió", "Educación básica", "Educación media", "Educación superior"))
+
+```
+
+```{r}
+sjmisc::descr(proc_data_imputed)
+summary(proc_data_imputed)
+```
+
+```{r}
+sjmisc::descr(proc_data_imputed,
+      show = c("label","range", "mean", "sd", "NA.prc", "n"))%>%
+      kable(.,"markdown")
+```
+
+Interpretacion:
+
+Las horas semanales trabajadas, los individuos en promedio trabajan aproximadamente 42.32 horas por semana, con una desviación estándar de 10.70 horas. Los ingresos promedio son de 581,742 pesos, con una gran variabilidad reflejada en una desviación estándar de 437,512. El nivel educacional más alto alcanzado por la madre y el padre, se observa una predominancia en categorías como educación básica y media.
+
+# Asociacion de variables
+
+```{r}
+sjt.xtab(proc_data$sexo, proc_data$trabajo_sinquehacer,
+         show.col.prc = TRUE,
+         show.summary = FALSE,
+         encoding = "UTF-8")
+```
+
+La tabla muestra que entre los encuestados, el 52% de los hombres y el 48% de las mujeres reportaron trabajar sin realizar quehaceres domésticos, mientras que el 30.5% de los hombres y el 69.5% de las mujeres indicaron no trabajar sin realizar quehaceres domésticos.
+
+# Correlaciones
+
+```{r}
+num_cols <- sapply(proc_data_imputed, is.numeric)
+```
+
+```{r}
+proc_data_numeric <- proc_data_imputed[, num_cols]
+```
+
+```{r}
+M <- cor(proc_data_numeric, use = "complete.obs")
+M
+
+```
+
+```{r}
+
+proc_data_imputed$niveleduc_madre_numeric <- as.numeric(factor(proc_data_imputed$niveleduc_madre, levels = c("No asistió", "Educación básica", "Educación media", "Educación superior")))
+
+
+
+```
+
+```{r}
+proc_data_imputed$niveleduc_padre_numeric <- as.numeric(factor(proc_data_imputed$niveleduc_padre, levels = c("No asistió", "Educación básica", "Educación media", "Educación superior")))
+
+```
+
+```{r}
+proc_data_imputed <- transform(proc_data_imputed, sexo = as.factor(sexo))
+
+dummy_sex <- model.matrix(~ sexo - 1, data = proc_data_imputed)  
+
+
+proc_data_imputed <- cbind(proc_data_imputed, dummy_sex)
+```
+
+```{r}
+proc_data_imputed <- proc_data_imputed %>%
+  mutate(
+    trabajo_sinquehacer = recode(trabajo_sinquehacer, "'1' = 1; '2' = 2"),
+    realizo_act = recode(realizo_act, "'1' = 1; '2' = 2"),
+    busco_trabajo = recode(busco_trabajo, "'1' = 1; '2' = 2")
+  )
+
+```
+
+```{r}
+num_cols <- sapply(proc_data_imputed, is.numeric)
+proc_data_numeric <- proc_data_imputed[, num_cols]
+```
+
+```{r}
+M <- cor(proc_data_numeric, use = "complete.obs")
+M
+
+
+```
+
+```{r}
+sjPlot::tab_corr(proc_data_numeric, 
+                 triangle = "lower")
+```
+
+```{r}
+
+corrplot::corrplot(M,
+  method = "color", 
+  addCoef.col = "#000390", 
+  type = "upper", 
+  tl.col = "black", 
+  na.label = "-")
+```
+
+La matriz nos entrega que trabajo_sinquehacer muestra una correlación débil positiva con horas_semanales (0.169) Esto sugiere que aquellos que trabajan sin realizar quehaceres domésticos pueden trabajar más horas. Además niveleduc_madre_numeric e ingresos tienen una correlación positiva (0.258) por lo que un mayor nivel educativo de la madre puede estar asociado con mayores ingresos en el hogar. Lo mismo con el niveleduc_padre_numeric con una correlacion positiva de (0.269). Al mismo tiempo la varibale sexoHombre muestra una correlación positiva moderada con ingresos (0.134), lo que sugiere que los hombres pueden tener ingresos ligeramente más altos en promedio, en constraste con sexoMujer, que posee una correlacion negativa por lo que indicaria que poseen ingresos bajo el promedio.
+
+# Regresiones
+
+```{r}
+
+proc_data_imputed$niveleduc_madre <- as_factor(proc_data_imputed$niveleduc_madre)
+proc_data_imputed$sexo <- as_factor(proc_data_imputed$sexo)
+
+proc_data_imputed <- na.omit(proc_data_imputed)
+
+reg1 <- lm(trabajo_sinquehacer ~ 1, data=proc_data_imputed)
+
+stargazer(reg1, type="text")
+```
+
+# Regresion lineal simple
+
+```{r}
+reg2 <- lm(ingresos ~ trabajo_sinquehacer, data = proc_data_imputed)
+reg3 <- lm(ingresos ~ niveleduc_madre_numeric, data = proc_data_imputed)
+reg4 <- lm(ingresos ~ horas_semanales, data = proc_data_imputed)
+
+
+coef_reg2 <- coef(summary(reg2))
+coef_reg3 <- coef(summary(reg3))
+coef_reg4 <- coef(summary(reg4))
+
+
+custom.coef.names <- c(
+  "Intercepto",
+  paste("Sexo", names(coef_reg2)[2], sep = " "),
+  paste("Educación madre", names(coef_reg3)[-1], sep = " "),
+  paste("Cantidad horas", names(coef_reg4)[-1], sep = " ")
+)
+
+
+knitreg(
+  list(reg2, reg3, reg4), 
+  custom.model.names = c("Modelo 1", "Modelo 2", "Modelo 3"),
+  custom.note = "*** p < 0.001; ** p < 0.01; * p < 0.05",
+  custom.coef.names = custom.coef.names,
+  caption = "Ingresos",
+  caption.above = TRUE
+)
+
+
+```
+
+La tabla muestra que los hombres tienden a tener ingresos mas altos en 185,427 pesos en comparación con las mujeres. Además a mayor nivel educativo de la madre, sus ingresos aumentan en un 159,268 al mismo tiempo el aumentar una hora de trabajo aumenta tambien en 5,608 pesos el ingreso.
+
+# Regresion multiple
+
+```{r}
+# Definir los modelos de regresión
+reg5 <- lm(ingresos ~ sexo + trabajo_sinquehacer, data = proc_data_imputed)
+reg6 <- lm(ingresos ~ sexo + horas_semanales, data = proc_data_imputed)
+reg7 <- lm(ingresos ~ trabajo_sinquehacer + horas_semanales, data = proc_data_imputed)
+reg8 <- lm(ingresos ~ sexo + trabajo_sinquehacer + horas_semanales, data = proc_data_imputed)
+
+# Verificar los coeficientes de los modelos (opcional)
+coeficientes_reg5 <- coef(reg5)
+coeficientes_reg6 <- coef(reg6)
+coeficientes_reg7 <- coef(reg7)
+coeficientes_reg8 <- coef(reg8)
+
+# Generar la tabla de resultados
+knitreg(
+  list(reg5, reg6, reg7, reg8), 
+  custom.model.names = c("Modelo 1", "Modelo 2", "Modelo 3", "Modelo 4"),
+  custom.note = "*** p < 0.001; ** p < 0.01; * p < 0.05",
+  custom.coef.names = c(
+    "Intercepto",
+    "Sexo (Mujer vs. Hombre)",
+    "Trabajo sin quehacer",
+    "Horas semanales"
+  ),
+  caption = "Regresión lineal de ingresos",
+  caption.above = TRUE
+)
+
+```
+
+El modelo 1, nos muestra que los hombres tienen 106,667 pesos más de ingresos en comparación con las mujeres, además las personas que trabajan sin realizar quehaceres domesticos poseen 165, 109 pesos menos de ingresos que los que si realizan labores domesticas.
+
+El modelo 2, los hombres poseen 126,336 pesos más de ingresos que las mujeres.
+
+El modelo 3, se ganan 212,329 pesos más al trabajar y realizar labores o quehaceres domesticos que trabajar y no hacerlos, manteniendo las otras variables constantes, además por cada una hora adicional que se trabaja se obtienen 7,245 pesos más de ingresos.
+
+El modelo 4, nos muestra que los hombes obitnene 85,385 pesos más que las mujeres, además se obtienen 193,986 pesos más si se trabaja y realizan labores domesticas al mismo tiempo, y por cada hora extra qu se utiliza en trabajar se ganan 6, 685 pesos más.
+
+Si bien, se posee un R2 bajo, por lo que se indicaria que los modelos explicarian una pequeña parte de la variabilidad de los ingresos. Sin embargo, de los modelos, el 4 es el que posee un R2 ajustado mayor por lo que sería el más explicativo.
+
+# Conclusiones
+
+Finalmente, esta demostrado que las mujeres tienen ingresos considerablemente menores que los hombres. Y que su nivel educativo es menor que el de ellos, lo cual afecta directamente de manera negativa a la cantidad de ingresos que estas reciben. Si bien, otros estudios indican que la carga domestica tendría un sesgo de genero, según lo que arrojaron los datos de la presente investigación, trabajar y realizar labores domesticas no implicaría una disminución de los ingresos, además de que tener la posibilidad de trabajar más horas permitiría aumentar esto. Dicho aquello, queda como interrogante, si las mujeres que realizan labores domesticas tienen la posibilidad de trabajar más horas para aumentar sus ingresos.
